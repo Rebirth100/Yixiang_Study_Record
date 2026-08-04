@@ -1,0 +1,43 @@
+一.切换国内安装源
+1.sudo  apt  install  gedit
+2.sudo  cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak
+3.sudo gedit  /etc/apt/sources.list.d/ubuntu.sources 
+删掉现有内容，粘贴以下内容:
+Types: deb
+URIs: http://mirrors.aliyun.com/ubuntu/
+Suites: noble noble-updates noble-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+###########################
+#也可以替换URIs的内容为以下站点
+#清华源：http://mirrors.tuna.tsinghua.edu.cn/ubuntu/
+#中科大源：http://mirrors.ustc.edu.cn/ubuntu/
+###########################
+
+4.sudo apt update
+5.sudo apt upgrade
+
+#############################
+#配置ubuntu安装软件是自动安装依赖
+sudo apt-get install aptitude
+
+
+二.安装google拼音中文输入法
+sudo apt install fcitx
+sudo apt install fcitx-googlepinyin
+fcitx-config-gtk3
+#############################
+#2404可以直接使用fcitx5
+sudo apt purge fcitx*
+sudo apt install fcitx5 fcitx5-chinese-addons fcitx5-config-qt
+sudo apt install fcitx5-pinyin
+im-config -n fcitx5
+reboot
+
+三.VM虚拟机中请安装vm工具
+sudo apt update
+sudo apt install open-vm-tools open-vm-tools-desktop
+
+
+
