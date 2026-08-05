@@ -4,8 +4,10 @@
 
 #include  "linklist.h"
 
-#define  NAME_SIZE 128
-#define SCORE_SIZE 4
+#define     NAME_SIZE 128
+#define     SCORE_SIZE 4
+
+//TODO: student
 struct  student
 {
     linkNode  node;
@@ -15,9 +17,21 @@ struct  student
 };
 typedef struct  student student;
 
-linkNode *initStudent();
-void freeStudent(student **);
-int getStudentSum(linkNode *);
-void printStudent(linkNode *);
 
+//TODO: initStudent
+linkNode *initStudent();
+//TODO: inputStudent
+linkNode* inputStudent(student *s);
+//TODO: freeStudent
+void freeStudent(student **);
+//TODO: getStudentSum
+int getStudentSum(linkNode *);
+//TODO: printStudent
+void printStudent(linkNode *);
+//TODO: studentMenu
+char studentMenu();
+//TODO:modifyStudent
+void modifyStudent(linkNode*);
+//TODO:compareStudent
+int compareStudent(linkNode*,linkNode*);
 #endif

@@ -37,6 +37,12 @@ linkNode *getLinkListNode(linkList*,size_t pos);
 //TODO:删除节点
 void  removeLinkList(linkList*,size_t pos);
 
+//TODO:修改节点
+void modifyListList(linkList*,size_t pos,void (*modify)(linkNode*));
+
+//TODO:查找节点(从start位置开始向后查找信息)
+size_t  findLinkList(linkList*,size_t  start,linkNode *data,int (*compare)(linkNode*,linkNode*));
+
 // typedef void (*Print)(linkNode*);
 // void printLinkList(linkList*,Print  p);
 

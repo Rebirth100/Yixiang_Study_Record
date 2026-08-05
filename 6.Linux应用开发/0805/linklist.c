@@ -105,6 +105,46 @@ void  removeLinkList(linkList*list,size_t pos)
     {
         prev=prev->next;
     }
-
     prev->next=prev->next->next;
+    list->size--;
+}
+
+//TODO:修改节点
+void modifyListList(linkList*list,size_t pos,void (*modify)(linkNode*))
+{
+    if(list==NULL  ||pos>=list->size||modify==NULL)
+    {
+        return;
+    }
+    linkNode*prev=&(list->head);
+    for(size_t i=0;i<pos;i++)
+    {
+        prev=prev->next;
+    }
+    modify(prev->next);
+}
+
+//TODO:查找节点(从start位置开始向后查找信息)
+size_t  findLinkList(linkList*list,size_t  start,linkNode *data,int (*compare)(linkNode*,linkNode*))
+{
+    if(list==NULL ||start>list->size-1||data==NULL ||compare==NULL)
+    {
+        return 0xFFFFFFFF;
+    }
+
+    linkNode*prev=&(list->head);
+    for(size_t i=0;i<start;i++)
+    {
+        prev=prev->next;
+    }
+
+    for(size_t s=start;s<list->size;s++)
+    {
+        if(compare(data,prev->next)==0)
+        {
+            return s;
+        }
+        prev=prev->next;
+    }
+    return 0xFFFFFFFF;
 }

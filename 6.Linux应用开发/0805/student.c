@@ -1,4 +1,5 @@
 #include "student.h"
+// TODO: initStudent
 linkNode *initStudent()
 {
     student *s = (student *)malloc(sizeof(student));
@@ -23,18 +24,18 @@ linkNode *initStudent()
     }
     return NULL;
 }
-
+// TODO: freeStudent
 void freeStudent(student **stu)
 {
     if (stu && (*stu))
     {
 #ifdef DEBUG
-        printf("释放了student:%s\n",(*stu)->name);
+        printf("释放了student:%s\n", (*stu)->name);
 #endif
         free(*stu);
     }
 }
-
+// TODO: getStudentSum
 int getStudentSum(linkNode *stu)
 {
     if (stu)
@@ -50,7 +51,7 @@ int getStudentSum(linkNode *stu)
 
     return 0;
 }
-
+// TODO: printStudent
 void printStudent(linkNode *s)
 {
     if (s)
@@ -63,4 +64,77 @@ void printStudent(linkNode *s)
         }
         printf("%d\n", stu->sum);
     }
+}
+
+// TODO: studentMenu
+char studentMenu()
+{
+    char select[8] = "\0";
+    fprintf(stderr, "+++++++++++++++++++++++++++++++++\n");
+    fprintf(stderr, "|  1.新增 2.删除 3.修改  4.查找 |\n");
+    fprintf(stderr, "|  0.退出    其他任意键浏览所有 |\n");
+    fprintf(stderr, "+++++++++++++++++++++++++++++++++\n");
+    scanf("%1s", select);
+    while (getchar() != '\n')
+        ;
+    return *select;
+}
+
+// TODO: inputStudent
+linkNode *inputStudent(student *s)
+{
+    if (s)
+    {
+        student *stu = (student *)malloc(sizeof(student));
+        memcpy(stu, s, sizeof(student));
+        stu->node.next = NULL;
+        return (linkNode *)stu;
+    }
+    return NULL;
+}
+
+// TODO:modifyStudent
+void modifyStudent(linkNode *stu)
+{
+    if (stu)
+    {
+        char num[8] = "\0";
+        student *s = (student *)stu;
+        puts("姓名:");
+        fgets(s->name, NAME_SIZE, stdin);
+        s->name[strlen(s->name) - 1] = '\0';
+        for (int i = 0; i < SCORE_SIZE; i++)
+        {
+            printf("请输入成绩[%d](0~100)\n", i + 1);
+            fgets(num, 8, stdin);
+            if (atoi(num) < 0 || atoi(num) > 100)
+            {
+                puts("成绩范围0~100");
+                i--;
+                continue;
+            }
+            if (!(*num >= '0' && *num <= '9'))
+            {
+                puts("成绩必须是数字");
+                i--;
+                continue;
+            }
+
+            s->score[i] = atoi(num);
+        }
+        s->sum = 0;
+    }
+}
+
+
+//TODO:compareStudent
+int compareStudent(linkNode*a,linkNode*b)
+{
+    if(a==NULL || b==NULL)
+    {
+        return 0xff;
+    }
+    student  *x=(student*)a;
+    student  *y=(student*)b;
+    return strcmp(x->name,y->name);
 }
