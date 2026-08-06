@@ -1,0 +1,9 @@
+1.FILE所表示的三个标准设备 stdin stderr stdout
+2.标准Io,二进制模式操作文件  fread /fwrite
+  fwrite(void*add,数据大小,数据个数,FILE)
+  fread(void*add,数据大小,数据个数,FILE)
+3.linux用户管理的命令  
+  useradd userdel usermod  passwd  groups  gpasswd
+  影子文件保存的内容  /etc/shadow
+  
+  
