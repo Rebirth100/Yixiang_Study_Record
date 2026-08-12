@@ -12,9 +12,30 @@
  *
  */
 
+
+
 #include <stdio.h>
 
-int main() {
 
+int main() {
+ double Profit;  //定义利润
+ double Bonus=0;  //定义奖金
+
+ printf("请输入当月利润：");
+ scanf("%lf",&Profit);
+ if(Profit<=10)
+  Bonus=Profit*0.1;
+ else if(Profit<=20)
+  Bonus=10*0.1+(Profit-10)*0.075;
+ else if(Profit<=40)
+  Bonus=10*0.1+10*0.075+(Profit-20)*0.05;
+ else if(Profit<=60)
+  Bonus=10*0.1+10*0.075+20*0.05+(Profit-40)*0.03;
+ else if(Profit<=100)
+  Bonus=10*0.1+10*0.075+20*0.05+40*0.03+(Profit-60)*0.015;
+ else
+  Bonus=10*0.1+10*0.075+20*0.05+40*0.03+60*0.015+(Profit-100)*0.01;
+
+ printf("您本月的奖金数为：%.2lf万元",Bonus);
  return 0;
 }
