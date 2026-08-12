@@ -1,1 +1,21 @@
+# CLion 编辑器缓存文件夹
 .idea/
+
+# Visual‑Studio缓存
+.vs/
+
+# CMake 构建文件、编译产物
+CMakeLists.txt
+CMakeCache.txt
+cmake‑build‑debug/
+cmake‑build‑release/
+
+# Windows可执行程序、编译出来的exe
+*.exe
+*.obj
+
+# vscode配置
+.vscode/
+
+# 临时文件
+*.log
