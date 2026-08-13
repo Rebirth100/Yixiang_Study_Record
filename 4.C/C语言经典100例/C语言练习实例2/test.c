@@ -21,7 +21,7 @@ int main() {
  double Profit;  //定义利润
  double Bonus=0;  //定义奖金
 
- printf("请输入当月利润：");
+ printf("请输入当月利润（万）：");
  scanf("%lf",&Profit);
  if(Profit<=10)
   Bonus=Profit*0.1;
