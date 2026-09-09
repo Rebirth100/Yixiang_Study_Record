@@ -1,0 +1,848 @@
+一：数据库
+查看所有数据库:	SHOW DATABASES
+创建数据库:	CREATE DATABSE database_name
+切换数据库:	USE database_name
+删除数据库:	DROP DATABASE database_name
+
+二：存储引擎
+查看MYSQL支持的引擎:	SHOW ENGINES \G (\G 使显示格式更好看)
+查看所支持的存储引擎: SHOW VARIABLES LIKE 'have%';
+查看默认的存储引擎：	SHOW VARIABLES LIKE 'storage_engine%';
+经试验，自己mysql上运行应该是: SHOW VARIABLES LIKE 'default_storage_engine%'
+修改默认存储引擎:方法1：向导模式修改 方法2：修改配置文件my.ini中default-storage-engine
+
+三：数据类型
+数据类型 字节
+TINYINT 1
+SMALLINT	2
+MEDIUMINT	3
+INT 和 INTEGER 4
+BIGINT	8
+
+FLOAT	4
+DOUBLE	8
+DECI(M,D)	M+2
+DECIMAL(M,D) M+2
+
+存储小数用float，需要精确到小数点后10位，用double；需要更精确的，用decimal
+
+BIT(M)	1~8
+
+DATE	4
+DATETIME	8
+TIMESTAMP	4
+TIME 3
+YEAR	1
+
+年月日用DATE;年月日时分秒用DATETIME;经常插入或更新日期为当前系统时间，用TIMESTAMP;时分秒用TIME;年份用YEAR。
+存储的日期需要让不同地区矠用户使用，则可以使用TIMESTAMP，因为只有该类型日期能够与实际时区相对应。
+
+eg:
+create table t_data_test(
+f_date DATE,
+f_datetime DATETIME,
+f_timestamp TIMESTAMP,
+f_time TIME,
+f_year YEAR);
+
+SELECT CURDATE(),NOW(),NOW(),TIME(NOW()),YEAR(NOW());
+结果:
+CURDATE()	NOW()	NOW()	TIME(NOW())	YEAR(NOW())
+12/1/2017	12/1/2017 20:16:56	12/1/2017 20:16:56	20:16:56	2017
+
+INSERT INTO t_data_test VALUES(CURDATE(),NOW(), NOW(), time(NOW()), YEAR(NOW()));
+SELECT * FROM t_data_test;
+f_date	f_datetime	f_timestamp	f_time	f_year
+12/1/2017	12/1/2017 20:13:37	12/1/2017 20:13:37	20:13:37	2017
+
+CHAR(M)	M
+VARCHAR(M)	M
+
+
+TINYTEXT	0~255
+TEXT	0~65535
+MEDIUMTEXT	0~167772150
+LONGTEXT	0~4294967295
+存文本文件
+
+BINARY(M)	M
+VARBINARY(M)	M
+存二进制数据（如图片、音乐、视屏文件）
+
+TINYBLOB 0~255
+BLOB	0~2^16
+MEDIUMBLOB	0~2^24
+LONGBLOB	0~2^32
+存大量二进制数据（如电影等视屏文件）
+
+
+四：表
+创建表：
+CREATE TABLE table_name(
+属性名 数据类型,
+属性名 数据类型,
+属性名 数据类型,
+.
+.
+.
+属性名 数据类型
+)
+
+查看表:
+DESCRIBE table_name;
+查看表详细定义（创建语句）:
+SHOW CREATE TABLE table_name (\G);
+删除表:
+DROP TABLE table_name;
+修改表：
+改表名: ALTER TABLE old_table_name RENAME [TO] new_table_name;
+在表的最后一个位置增加字段: ALTER TABLE table_name ADD 属性名 数据类型;
+在表的最后一个位置增加字段: ALTER TABLE table_name ADD 属性名 数据类型 FIRST;
+在表的指定字段之后增加字段: ALTER TABLE table_name ADD 属性名 数据类型 AFTER 属性名;
+删除字段：ALTER TABLE table_name DROP 属性名;
+修改字段：ALTER TABLE table_name MODIFY 属性名 数据类型;
+修改字段名字：ALTER TABLE table_name CHANGE 旧属性名 新属性名 数据类型;
+同时修改字段名字和属性：ALTER TABLE table_name CHANGE 旧属性名 新属性名 新数据类型;
+修改字段的顺序：ALTER TABLE table_name MODIFY 属性名1 数据类型 FIRST
+或: ALTER TABLE table_name MODIFY 属性名1 数据类型 AFTER 属性名2
+
+五：表约束
+NOT NULL：非空
+DEFAULT：默认值
+UNIQUE KEY(UK)：唯一键
+PRIMARY KEY(PK)：主键
+FOREIGH KEY(FK)：外键
+AUTO_INCREMENT：
+
+
+--其他数据库支持的check约束(检测字段值的限定)
+
+eg:
+CREATE TABLE table_name(
+属性名 数据类型 NOT NULL,
+属性名 数据类型 DEFAULT 默认值,
+属性名 数据类型	UNIQUE,
+属性名 数据类型	PRIMARY KEY,
+属性名 数据类型 AUTO_INCREMENT
+)
+
+或将约束条件写在后面：
+CREATE TABLE table_name(
+属性名 数据类型 NOT NULL,
+属性名 数据类型 DEFAULT 默认值,
+属性名 数据类型,
+属性名 数据类型,
+属性名 数据类型,
+CONSTRAINT UK约束名 UNIQUE(dname)，
+CONSTRAINT PK约束名 PRIMARY KEY(属性名，属性名……),
+CONSTRAINT FK约束名 FOREIGH KEY(属性名1) REFERENCES 表名(属性名2)
+)
+
+六：索引
+表是存储和操作数据的逻辑结构，而索引则是一种有效组合数据的方式。通过索引对象，可以快速查询到表中矠特定记录，是一种提高性能的常用方式。 一个索引会包含表中按照一定顺序排序的一列或多列字段。
+索引按照存储类型，可以分为B型树索引(BTREE)和哈希索引(HASH). InnoDB和MyISAM存储引擎支持BTREE类型索引，MEMORY存储引擎支持HASH类型索引。默认为前者索引。
+索引除了可以提高数据库管理系统的查找速度，还可以保证字段的唯一性，从而实现数据库表的完整性。创建索引可以提高查询速度，但过多的创建索引则会占据许多磁盘空间。
+以下情况适合创建索引：
+1）经常被查询的字段，即在where子句中出现的字段；
+2）分组的字段，即在group by子句中出现的字段；
+3）存在依赖关系的子表和父表之间的联合查询，即主键或外键字段。
+4）设置唯一完整性约束的字段。
+以下情况不适合创建索引：
+1）在查询中很少被使用的字段；
+2）拥有许多重复值的字段。
+索引可以分为普通索引、全文索引、单列索引、多列索引和空间索引。
+
+创建(3种方式)：
+CREATE TABLE table_name(
+属性名 数据类型,
+属性名 数据类型,
+……
+属性名 数据类型,
+【UNIQUE|FULLTEXT】INDEX | KEY [索引名] (属性名 【(长度)】 【ASC|DESC】, ...)
+);
+CREATE 【UNIQUE|FULLTEXT】INDEX 索引名 ON 表名 (属性名 【(长度)】 【ASC|DESC】, ...)
+ALTER TABLE table_name ADD 【UNIQUE|FULLTEXT】INDEX|KEY 索引名(属性名 【(长度)】 【ASC|DESC】, ...)
+eg: CREATE TABLE t_dept(
+deptno INT,
+dname VARCHAR(20),
+loc VARCHAR(40),
+INDEX index_deptno(deptno)
+);
+
+唯一索引要加UNIQUE修饰符，全文索引加FULLTEXT修饰符。普通索引和多列索引不需要加。 多列索引后面是多个列名，中间用,分隔。
+
+查看索引:
+SHOW CREATE TABLE table_name \G;
+校验索引是否被启用:
+EXPLAIN SELECT * FROM t_dept WHERE deptno = 1\G;
+
+删除索引:
+DROP INDEX index_name ON table_name；
+
+七、视图
+视图可以提高复杂SQL语句矠复用性和表操作的安全性。视图本质上是一种虚拟表，其内容与真实的表相似，但视图并不在数据库中以存储的数据值形式存在。行和列数据来自定义视图的查询所引用基本表，并且在具体引用视图时动态生成。
+视图特点如下：
+1）视图的列可以来自不同的表，是表的抽象和在逻辑意义上建立的新关系；
+2）视图是由基本表（实表）产生的表（虚表）；
+3）视图的建立和删除不影响基本表；
+4）对视图内容的更新（添加、删除和修改）直接影响基本表；
+5）当视图来自多个基本表时，不允许添加和删除数据。
+
+创建视图：
+CREATE VIEW view_name AS 查询语句;
+
+查看视图:
+SHOW TABLES;
+DESCRIBE view_name;
+SHOW CREATE VIEW view_name;
+select * from information_schema.views where table_name like 'v%'
+查看视图详细信息:
+SHOW TABLE STATUS 【FROM db_name】 【LIKE 'pattern'】
+
+删除视图:
+DROP VIEW view_name【,view_name2, ...】
+
+修改视图:
+CREATE OR REPLACE VIEW view_name AS 查询语句
+ALTER VIEW view_name as 查询语句
+或：先删除后创建新的
+
+利用视图操作基本表：
+和操作实表一样，只不过将表名换成了视图名。
+
+八、触发器
+经常使用触发器是因为触发器可以加强数据库表中数据的完整性约束和业务规则等。
+触发器使用地方：DELETE、INSERT、UPDATE。
+
+触发器中可以写一行语句，也可以写多行语句。
+每张表只能针对DELETE、INSERT、UPDATE三个事件的BEFORE和AFTER两个时间点添加最多六个（3event*2时间点）触发器。
+
+创建触发器:
+CREATE TRIGGER trigger_name 
+BEFORE|AFTER trigger_event 
+ON table_name FOR EACH ROW 
+【BEGIN】
+trigger_stmt;
+【END】
+其中trigger_event就是DELETE、INSERT、UPDATE；trigger_stmt就是要执行的语句,单行语句不需要加BEGIN END，多行则需要。
+eg:
+每次t_dept表插入数据前都在t_diary日志表中增加一条日志记录。
+CREATE TRIGGER tri_diarytime 
+BEFORE INSERT 
+ON t_dept FOR EACH ROW 
+INSERT INTO t_diary VALUES(NULL,'t_dept',now());
+
+DELIMITER $$
+CREATE TRIGGER tri_diarytime 
+BEFORE INSERT 
+ON t_dept FOR EACH ROW 
+BEGIN
+INSERT INTO t_diary VALUES(NULL,'t_dept',now());
+INSERT INTO t_diary VALUES(NULL,'t_dept',now());
+END
+$$
+DELIMITER ;
+
+写多行语句前要通过DELIMITER更换分隔符或还原分隔符。
+
+查看触发器：
+SHOW TRIGGERS;
+SELECT * FROM information_schema.triggers where trigger_name like 'pattern';
+
+
+删除触发器:
+DROP TRIGGER trigger_name;
+
+
+九、插入、更新、删除数据
+插入完整数据记录:
+INSERT INTO table_name VALUES(value1,value2...);
+插入数据记录一部分:
+INSERT INTO table_name(field1,field2,...) VALUES(value1,value2,...);
+插入多条数据:
+INSERT INTO table_name VALUES(value11,value12...),(value21,value22...),...;
+INSERT INTO table_name(field1,field2,...) VALUES(value11,value12...),(value21,value22...),...;
+插入查询结果:
+INSERT INTO table_name(field1,field2,...)
+SELECT (field1,field2,...) 
+FROM table_name2 WHERE ...
+
+注意:自增的字段或有默认值的字段，可以采用插入数据记录的一部分的方法插入，这种方法还不依赖表字段的顺序，可扩展性好，建议使用。
+
+更新数据:
+UPDATE table_name
+SET field1 = value1,
+SET field2 = value2,
+...
+WHERE CONDITION;
+
+删除数据:
+DELETE FROM table_name WHERE CONDITION;
+
+删除整张表里的数据：
+DELETE FROM table_name;
+TRUNCATE table_name；(速度更快，建议使用，原理：删除整张表，然后再根据原表DLL语句创建一个一模一样的表)
+
+十、单笔数据记录简单查询
+简单查询使用方式包括:
+1)简单数据查询；
+2）避免重复数据查询；
+3）实现数学四则运算数据查询； +-*/%
+4）设置显示格式数据查询。
+eg:
+SELECT * FROM t_dept;
+SELECT DISTINCT filed1,field2 ... fieldn FROM table_name; (多个字段组合起来唯一)
+SELECT ename, sal*12 AS yearsalary FROM t_employee;
+SELECT CONCAT(ename, '雇员的年薪为: '， sal*12) yearsalary FROM t_employee;
+
+条件数据查询: 
+单条件 
+多条件 
+between and 
+NOT
+IS NULL / IS NOT NULL 
+IN / NOT IN (使用IN时，查询的集合（IN后面的枚举值）中如果存在NULL，则不会影响查询；如果使用关键字NOT IN，查询的集合中如果存在NULL，则不会查询到任何数据)
+LIKE / NOT LIKE _ %
+
+排序:
+SELECT field1,field2...fieldn
+FROM table_name
+WHERE CONDITION
+ORDER BY fieldm1 [ASC|DESC], fieldm2 [ASC|DESC] ...
+
+如果字段的值为空值(NULL)，则该值为最小值，因此在降序排序中将最后显示，在升序排序中将最先显示。
+
+限制数据记录查询数量
+SELECT field1,field2...fieldn
+FROM table_name
+WHERE CONDITION
+LIMIT offset_start,row_count;
+使用方式:
+1)不指定初始位置，只指定行数。 LIMIT row_count;
+2)指定初始位置，指定行数。 LIMIT offset_start,row_count; 不包括offset那一行
+
+统计函数：
+count() avg() sum() max() min()
+count(*):对表中数据进行统计，不管表字段中包含的是NULL值还是非NULL值；
+count(field):对指定字段的记录进行统计，忽略NULL值。
+其他几个统计函数，必须指定字段，所以忽略NULL值。
+如果所操作的表中没有任何数据记录，则count()函数返回0，其他统计函数返回NULL。
+
+分组数据记录查询：
+SELECT function()
+FROM table_name
+WHERE CONDITION
+GROUP BY field1,field2...
+HAVING CONDITION
+在具体进行分组查询时，分组所依赖的字段上的值一定要具有重复值，否则将没有任何意义。
+首先针对field1进行分组，然后针对每组按照字段field2进行分组，以此类推。
+SELECT * FROM table_name GROUP BY CONDITION; 是从分组中随机选择一条记录显示。 所以group by 要和统计函数一起使用才有意义。
+
+SELET deptno,GROUP_CONCAT(ename),COUNT(ename) number enames FROM t_employee GROUP BY deptno;
+会将每组中的ename组合在一起显示. 
+结果:
+deptno	enames	number
+10	MILLER,KING,CLARK	3
+20	FORD,ADAMS,SCOTT,JONES,SMITH	4
+30	BLAKE,MARTIN	2
+
+
+十一、多表数据记录查询：
+在具体应用中如果需要实现多表数据记录查询，一般不使用连接查询，因为该操作效率比较低，而是使用子查询操作。进行连接操作时，会求笛卡尔积，如果表数据记录多，则可能会造成死机。
+MYSQL在具体实现连接查询操作时，首先将两个或两个以上的表按照某个条件连接起来，然后再查询到所要求的数据记录。
+连接操作是关系数据库操作中专门用于数据库操作的关系运算，包括并（UNION）、笛卡尔积（CARTESIAN PRODUCT）和专门针对数据库操作的运算-连接（JOIN）。
+
+并（UNION）：把具有相同字段数目和字段类型的表合并到一起。 
+笛卡尔积（CARTESIAN PRODUCT):是没有连接条件表关系返回的结果。 
+eg：表A：字段数目为m，行数为k。 表B字段数目为n，行数为l。 则结果表字段数目为m+n,行数为k*l.
+
+连接（JOIN）：在表关系的笛卡尔积数据记录中，按照相应字段值的比较条件进行选择生成一个新的关系。
+连接分为内连接(inner join) 、外连接(outer join) 和交叉连接(cross join)。
+1.内连接：在表关系的笛卡尔积数据记录中，保留表关系中所有匹配的数据记录，舍弃不匹配的数据记录。
+按照匹配的条件可以分成自然连接、等值连接和不等连接。
+自然连接：在表关系的笛卡尔积中，首先根据表关系中相同名称的字段自动进行记录匹配，然后去掉重复的字段。 
+eg：表A 有字段名a,b;表B也有字段名a,b。则自然连接时，先求A和B的笛卡尔积，然后匹配A.a=B.a and A.b = B.b的记录，不符合该条件的全部舍弃。 笛卡尔积中，A.a A.b B.a B.b都会显示，共4个字段，但自然连接中，只显示a,b2个字段。
+特点:1)在具体执行自然连接时，会自动判断相同名称的字段，然后进行数据值的匹配。
+2)在执行完自然连接的新关系中，虽然可以指定包含哪些字段，但是不能指定执行过程中的匹配条件，即哪些字段的值进行匹配。
+3)在执行完自然连接的关系中，执行过程中所有匹配的字段名只有一个，即会去掉重复字段。
+
+等值连接：在表关系的笛卡尔积中，选择所匹配字段值相等的数据记录。
+特点：1)使用=指定匹配条件；
+2)在新关系中，不会去掉重复字段。
+
+不等连接：在表关系的笛卡尔积中，选择所匹配字段值不相等的数据记录。
+特点：1)使用!=指定匹配条件；
+2)在新关系中，不会去掉重复字段。
+2.外连接:在表关系的笛卡尔积数据记录中，不仅保留表关系中所有匹配的数据记录，而且还会保留部分不匹配的数据记录。
+按照保留不匹配条件数据记录来源可以分为左外连接(left outer join)、右外连接(right outer join)和全外连接(full outer join)。
+左外连接：在表关系的笛卡尔积中，除了选择相匹配的数据记录，还包含关联左边表中不相匹配的数据记录。
+右外连接：在表关系的笛卡尔积中，除了选择相匹配的数据记录，还包含关联右边表中不相匹配的数据记录。
+全外连接：在表关系的笛卡尔积中，除了选择相匹配的数据记录，还包含关联左右两边表中不相匹配的数据记录。
+
+3.交叉连接：不带where子句的连接，返回的就是笛卡尔积数据记录。
+
+总结：
+表A和B
+UNION： A并B
+inner join: A交B 根据交的条件分为：自然连接、等值连接、不等值连接。 使用的是比较运算符进行匹配条件的判断。
+outer join: 
+左外连接：A并(A交B)
+右外连接：(A交B)并B
+全外连接:A并(A交B)并B
+cross join: A乘B 十字交叉，笛卡尔积
+
+语法:
+内连接：
+SELECT field1 field2 ... fieldn
+FROM join_table_name1 INNER JOIN join_table_name2 [INNER JOIN join_table_namen]
+ON join_condition
+外连接:
+SELECT field1 field2 ... fieldn
+FROM join_table_name1 LEFT|RIGHT|FULL [OUTER] JOIN join_table_name2 [INNER JOIN join_table_namen]
+ON join_condition
+UNION:
+SELECT field1 field2 ... fieldn
+FROM table_name1
+UNION | UNION ALL
+SELECT field1 field2 ... fieldn
+FROM table_name2
+UNION | UNION ALL
+SELECT field1 field2 ... fieldn
+FROM table_nameN
+...
+
+子查询：一个查询之中嵌套了其他的若干查询，即在一个SELECT查询语句的WHERE或FROM子句中包含另外一个SELECT查询语句。
+通过子查询可以实现多表查询，该查询语句中可能包含IN、ANY、ALL和EXISTS等关键字，除此之外还可能包含比较运算符。理论上子查询可以出现在查询语句的任意位置，但是在实际开发中，子查询经常出现在WHERE和FROM子句中。
+WHERE子句中的子查询：该位置处的子查询一般返回单行单列、多行单列、单行多列数据记录。
+FROM 子句中的子查询：该位置处的子查询一般返回多行多列数据记录，可以当做一张临时表。
+
+eg:
+子查询返回单行单列: select * from t_employee where sal > (select sal from t_employee where ename = 'SMITH'); (工资大于SMITH的人)
+子查询返回单行多列：select ename,sal,job from t_employee where (sal,job) = (select sal,job from t_employee where ename='SMITH');
+（职位和工资和SIMITH一样的人）
+子查询返回多行单列：select * from t_employee where deptno in (select deptno from t_dept);
+select ename,sal from t_employee where sal > any(select sal from t_employee where job = 'MANAGER');
+=ANY(等同于IN) >ANY <ANY ANY是任意一个的意思。
+>ALL <ALL ALL是所有的意思。
+select * from t_deptno c where not EXISTS(select * from t_employee where deptno = c.deptno); （列出没有雇员的部门）
+
+子查询返回多行多列：
+select d.deptno,d.dname,d.loc,number,average 
+from t_dept d inner join (
+select deptno dno,count(empno) number, avg(sal) average 
+from t_employee group by deptno desc ) employee 
+on d.deptno = employee.dno;
+(查询t_employee表中各个部门的部门号、部门名称、部门地址、雇员人数和平均工资)
+
+
+十二、Mysql运算符
+算术运算符： + - * / % (除数为0时返回null)
+比较运算符： > < =或<=> != 或 <> >= <= 
+BETWEEN AND IS NULL IN	LIKE	REGEXP
+
+=不能操作NULL，如果一方为NULL则返回NULL。 而<=>则可以操作NULL。
+eg: SELECT NULL <=> NULL '<=>符号效果', NULL = NULL '=符号效果';
+结果：1 NULL
+!= 和 <>都不能操作NULL。> >= < <=也不能操作NULL。
+
+REGEXP:正则表达式
+MYSQL支持的模式字符:
+^	匹配字符串的开始部分
+$	匹配字符串的结束部分
+.	匹配字符串中的任意一个字符
+[字符集合]	匹配字符集合中的任意一个字符
+[^字符集合]	匹配字符集合外的任意一个字符
+str1|str2|str3	匹配str1、str2、str3中的任意一个字符串
+* 匹配字符，包含0个和1个
++	匹配字符，包含1个或以上
+字符串[N]	字符串出现N次
+字符串[M,N]	字符串出现至少M次，至多N次
+
+逻辑运算符:	AND(&&) OR(||) NOT(!) XOR
+AND:所有操作数不为0且不为NULL，返回1；存在任意一个操作数为0，返回0；存在任意一个操作数为NULL，且没有操作数为0，返回NULL。
+OR：所有操作数存在任何一个操作数不为0，则返回1；所有操作数都为0数字，返回0；所有操作数中不包含非0数字，但包含NULL，返回NULL。
+NOT:操作数为非0数字，返回0,；操作数为0，返回1，操作数为NULL，返回NULL；
+XOR：操作数同为0数字或非0数字，返回0；操作数一个为0，另一个为非0，返回1；操作数中包含NULL，返回NULL.
+总结：OR NOT XOR如果有一个操作数为NULL，就返回NULL,其他和正常理解的一样；
+AND 如果有一个操作数为0，就为0；如果存在NULL，且不存在0则返回NULL；
+
+位运算符： & | ~ ^ << >> 现将十进制数转换为二进制，然后再进行位运算，最后结果转换为十进制，再显示。
+显示二进制形式：BIN(name);
+
+十三、常用函数
+mysql中，函数不仅可以出现在select语句及其子句中，还可以出现在update和delete语句中。
+函数可移植性不好。
+字符串函数:
+concat(str1,str2,...strn)	连接字符串str1,str2,...strn为一个完整字符串 (一个为NULL,则结果为NULL)
+concat_ws（sep,str1,str2,...strn）	连接字符串str1,str2,...strn为一个完整字符串，各个字符串使用sep分隔符分割。（分隔符为NULL，则返回NULL，字符串中有NULL，则忽略。）
+lower(str) lcase(str)	将字符串str中所有字符变为小写
+upper(str) ucase(str)	将字符串str中所有字符变为大写
+strcmp(str1,str2)	比较字符串str1和str2
+length(str)	返回字符串长度（一个英文算一个，一个汉字算两个）
+char_length(str)	返回字符串长度（一个英文算一个，一个汉字算一个）
+left(str,count)	返回字符串str中最左边的count个字符
+right(str,count)	返回字符串str中最右边的count个字符
+substring(str,pos,count)	返回字符串str中pos位置之后的count个字符。（从1开始数，包括pos）
+mid(str,pos,count)	返回字符串str中pos位置之后的count个字符。（从1开始数，包括pos）
+ltrim(str)	去掉字符串左侧的空格
+rtrim(str)	去掉字符串右侧的空格
+trim(str)	去掉字符串两侧的空格
+insert(str,pos,len,newstr)	将字符串str中的pos位置开始长度为len的字符串用字符串newstr替换。若任何一个参数为null，返回null.
+replace(str,substr,newstr)	将字符串str中的子字符串substr用newstr替换
+
+ 
+
+数值函数:
+
+abs(x)	返回x的绝对值	
+ceil(x)	ceiling(x)	返回大于x的最小正整数
+floor(x)	返回小于x的最大正整数
+round(x)	返回x四舍五入后的整数
+round(x,y)	返回x四舍五入后有y位小数的数值
+mod(x,y)	返回x%y
+rand() rand(x)	返回0~1内的随机数(rand()多次调用返回值不同，但rand(x)只要x一样，多次调用返回值一样。)
+truncate(x,y)	返回x截断为y位小数的数值
+注：y表示小数位数时，如果取负数，表示整数位。如-1，表示截断个位数。
+
+日期函数:
+curdate() current_date()	获取当前日期
+curtime() current_timestamp()	获取当前时间
+localtime()	获取当前时间
+sysdate()	获取当前时间
+now()	获取当前日期和时间
+unix_timestamp(date)	from_unixtime(utime)
+utc_date(date)	utc_time(date)
+获取日期和时间各个部分:
+year(date) quarter(date) month(date) week(date) hour(time) minute(time) second(time)
+monthname(date) dayname(date) 
+weekofyear(date) dayofyear(date) dayofmonth(date) dayofweek(date) weekday(date)
+extract(type from date): extract(year from now()) extract(month from now()) ...
+
+datediff(date1,date2)	date1和date2相隔天数
+adddate(date,n)	date加上n天
+subdate(date,n)	date减去n天
+addtime(time,n)	time加上n秒
+subtime(time,n)	time减去n秒
+
+ 
+
+系统信息函数:
+version()	返回数据库版本号
+datebase()	返回当前数据库名
+user()	返回当前用户
+last_insert_id()	返回最近生成的auto_increment值
+
+流程函数:
+if(value,t f)	如果value为真，返回t，否则返回f
+ifnull(value1,value2)	如果value1不为空值，返回value1，否则返回value2
+case when [value1] then [result1] ... else [default] end
+如果value1为真，返回result1,...都不符合返回default
+case [expr] when [value1] then [result1] ... else [default] end
+如果expr等于value1返回result1，...都不符合返回defalut。
+
+十四、存储过程和函数
+存储过程和函数是事先经过编译并存储在数据库中的一组sql语句集合。
+函数必须有返回值，而存储过程则没有。
+存储过程的参数类型远远多于函数参数类型。
+优点：
+1）存储过程和函数运行标注组件式编程，提高了SQL语句的重用性、共享性和可移植性；
+2）存储过程和函数能够实现较快的执行速度，能够减少网络流量；
+3）存储过程和函数可以被当做为一种安全机制来利用。
+缺陷：
+1）存储过程和函数的编写比单条sql语句复杂，需要用户具有更高的技能和更丰富的经验；
+2）在编写存储过程和函数时，需要创建这些数据库对象的权限。
+
+创建存储过程：
+CREATE PROCEDURE procedure_name([procedure_parameter[,...]])
+[characteristic...] routine_body
+procedure_name：存储过程名字
+procedure_parameter:存储过程参数,语法形式为[IN|OUT|INOUT] parameter_name type
+characteristic：存储过程特性
+routine_body:存储过程SQL语句代码，可以用BEGIN...END 来标识SQL语句的开始和结束
+
+创建函数:
+CREATE FUNCTION function_name ([function_parameter[,...]])
+[characteristic...] routine_body
+function_parameter：函数参数,语法形式为 parameter_name type.
+
+存储过程和函数中的表达式中：由变量、运算符和流程控制构成。
+变量:
+声明变量:DECLARE var_name[,...] type [DEFAULT value]
+变量赋值:SET var_name = expr[,...] 或 SELECT field_name[,...] INTO var_name[,...] FROM table_name WHERE condition;
+
+游标（取出结果集进行处理效率低，能不使用就不使用游标）：
+声明游标：DECLARE cursor_name CURSOR FOR select_statement；
+打开游标：OPEN cursor_name
+使用游标：FETCH cursor_name INTO var_name[,var_name] ...
+关闭游标：CLOSE cursor_name
+
+
+流程控制：
+条件控制语句: 
+IF search_condition THEN statement_list
+[ELSEIF search_condition THEN statement_list] ...
+[ELSE statement_list]
+END IF
+
+CASE case_value
+WHEN when_value THEN statement_list
+[WHEN when_value THEN statement_list] ...
+[ELSE statement_list]
+END CASE
+
+循环控制语句：
+[begin_label:] LOOP
+statement_list
+END LOOP [end_label]
+
+[begin_label:] WHILE search_condition DO
+statement_list
+END WHILE [end_label]
+
+[begin_label:] REPEAT search_condition DO
+statement_list
+END REPEAT [end_label]
+
+
+查看存储过程和函数:
+SHOW CREATE PROCEDURE procedure_name;
+SHOW CREATE FUNCTION function_name;
+SHOW PROCEDURE STATUS [LIKE 'pattern'] \G
+SHOW FUNCTION STATUS [LIKE 'pattern'] \G
+
+SELECT * FROM information_schema.routines \G;
+SELECT * FROM information_schema.routines WHERE specific_name = 'name' \G;
+
+修改存储过程和函数:
+ALTER PROCEDURE procedure_name
+[characteristic ...]
+ALTER FUNCTION function_name
+[characteristic ...]
+
+删除存储过程和函数：
+DROP PROCEDURE procedure_name;
+DROP FUNCTION function_name;
+
+十五、事务
+MYSQL引擎中，InnoDB和BDB支持事务，MyISAM和MEMORY不支持事务。 InnoDB通过UNDO日志和REDO日志来实现事务。
+事务4个特性：
+1）原子性（atomicity）：事务中所有的操作视为一个原子单元，即对于事务所进行的数据修改等操作只能是完全提交或完全回滚。
+2）一致性（consistency）：事务在完成时，必须使所有的数据从一种一致性状态变更为另一种一致性状态，所有的变更都必须应用于事务的修改，以确保事务的完整性。
+3）隔离性（isolation）:一个事务中的操作语句所做的修改必须与其他事务所做的修改相隔离。在进行事务查看数据时，数据所处的状态，要么是被另一并发事务修改之前的状态，哟啊么是被另一个并发事务修改之后的状态，即当前事务不会查看由另一个并发事务正在修改的数据。这种特性通过锁机制来实现。
+4）持久性（durability）:事务完成之后，所做的修改对数据的影响是永久性的，即使系统重启或者出现系统故障仍可以恢复。
+
+MYSQL使用BEGIN开始事务，使用COMMIT结束事务，中间可以使用ROLLBACK回滚事务。
+START TRANSACTION | BEGIN [WORK]
+COMMIT [WORK] [AND [NO] CHAIN] [[NO] RELEASE]
+ROLLBACK [WORK] [AND [NO] CHAIN] [[NO] RELEASE]
+SET AUTOCOMIT = {0 | 1}
+事务隔离级别：
+SQL标准定义了4种隔离级别，指定了事务中哪些数据改变其他事务可以见，哪些数据改变其他事务不可见。低级别的隔离级别可以支持更高的并发处理，同时占用的资源更少。
+事务隔离级别可以使用以下语句设置:
+#未提交读
+SET GLOBAL TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+#提交读
+SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;
+#可重复性
+SET GLOBAL TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+#可串行化
+SET GLOBAL TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+1)READ UNCOMMITTED(读取未提交内容)
+在该隔离级别，所有事务都可以看到其他未提交事务的执行结果，因为其性能也不必其他级别搞很多，因为此隔离级别实际应用中一般很少使用，读取未提交的数据被称为脏读（Dirty Read）。
+2)READ COMMITTED(读取提交内容)
+这是大多数数据库系统的默认隔离级别，但不是MYSQL默认的隔离级别。
+其满足了隔离的简单定义：一个事务从开始到提交前所做的任何改变都是不可见的。事务只能看见已经提交事务所做的改变。
+这种隔离级别也支持所谓的不可重复读(Nonrepeatable Read),因为同一事务的其他实例在该实例处理期间可能会有新的数据提交导致数据改变，所以统一查询可能返回不同结果。
+3)REPEATABLE-READ(可重复读)
+这是MYSQL的默认事务隔离级别，能确保同一事务的多个实例在并发读取数据时，会看到同样的数据行。
+理论上会导致另一个问题：幻读(Phantom Read)。
+eg：第1个事务对一个表中的数据进行了修改，这种修改涉及表中的全部数据行。同时第2个事务也修改这个表中的数据，这种修改是向表中插入一行新数据。那么，以后就会发生操作第1个事务的用户发现表中还有没有修改的数据行。
+InnoDB和Falcon存储引擎通过多版本并发控制(Multi_Version Concurrency Control,MVCC)机制解决了该问题。
+
+4）Serializable(可串行化)
+这是最高的隔离级别，通过强制事务排序，使之不能相互冲突，从而解决幻读问题。简言之，就是在每个读的数据行上加上共享锁实现。
+在这个级别，可能会导致大量的超时现象和锁竞争，一般不推荐使用。
+
+MySQL中所有的DDL语句是不能回滚的，并且部分的DDL语句会造成隐式的提交。比如ALTER TABLE、TRUNCATE TABLE 和 DROP TABLE等。
+
+锁机制:
+共享锁：S(Share) 读锁 锁粒度为行或元组(多个行) 一个事务获取了共享锁之后，可以对锁定范围内的数据进行读操作。
+排他锁：X(eXclusive) 写锁 锁粒度为行或元组(多个行) 一个事务获取了排他锁之后，可以对锁定范围内的数据进行写操作。
+意向锁:分意向共享锁(IS)和意向排他锁(IX)。 锁粒度为整张表。 "有意"表示事务想执行操作但还没有真正执行。
+锁和锁之间的关系：相容（两个事务可以对同一组数据同时加锁）或互斥（一个事务对一组数据加锁后，其他事务不能再加锁了）。
+各个锁的关系如下：(Y:相容 N:互斥)
+参数	X	S	IX	IS
+X	N	N	N	N
+SN	N	Y	N	Y
+IX	N	N	Y	Y
+IS	N	Y	Y	Y
+
+锁粒度：分为表锁和行锁。
+表锁管理锁的开销最小，同时运行的并发来那个也是最小的。 MyISAM存储引擎使用该锁机制。 一些特定的动作也使用表锁，如ALTER TABLE.
+行锁可以支持最大的并发。InnoDB存储引擎使用的是行锁。 如果要支持并发读/写，建议采用InnoDB存储引擎，因为其是采用行级锁，可以获的更多的更新性能。
+
+SQL执行时加锁:
+SELECT ... LOCK IN SHARE MODE 加上一个共享锁
+SELECT ... FOR UPDATE 加上一个排他锁
+
+InnoDB引擎会自动给会话事务中的共享锁、更新锁以及排他锁，需要加到一个区间值域时，再加上个间隙锁或称为范围锁，对不存在的数据也锁住，防止出现幻写。
+
+十六、Mysql安全机制
+创建用户：
+CREATE USER username@ip IDENTIFIED BY [PASSWORD] 'password', username@ip IDENTIFIED BY [PASSWORD] 'password' ...;
+通过向mysql数据库中的user表插入记录的方式来创建用户。注意：1)需要插入x509_issuer等字段值，2)需要FLUSH PRIVILEGES;生效。3)密码要使用PASSWORD函数加密。
+INSERT INTO user(Host,User,Password,ssl_cipher,x509_issuer,x509_subject)
+VALUES('localhost','wyl',PASSWORD('password'),'','','');
+通过GRANT语句创建用户并同时赋权限
+GRANT priv_type ON databasename.tablename
+TO username [IDENTIFIED BY [PASSWORD] 'password']
+[,username [IDENTIFIED BY [PASSWORD] 'password']]
+...
+eg:GRANT SELECT ON paydb.t_txn_ds TO 'paydb'@'localhost' IDENTIFIED BY '123456';
+
+修改密码：
+使用超级权限用户修改root用户密码:
+方法一：mysqladmin -u username -p oldpassword "new_password";
+方法二: SET PASSWORD=PASSWORD("new_password");
+方法三:通过修改user表记录修改。
+UPDATE user SET password=PASSWORD("new_password") WHERE user = 'root' and host = 'localhost';
+使用超级权限用户修改普通用户密码:
+方法一:GRANT priv_type ON database.table TO user[IDENTIFIED BY [PASSWORD] "new_password"]
+方法二：SET PASSWORD FOR 'username'@'hostname'=PASSWORD("new_password"); 如果是修改自己的密码，不需要写FOR 'username'@'hostname'.
+方法三:通过修改user表记录修改。
+UPDATE user SET password=PASSWORD("new_password") WHERE user = 'username' and host = 'localhost';
+
+
+删除用户：
+方法一：DROP USER user1[,user2...];
+方法二:用root账号登陆，删除user表中记录。
+DELETE FROM user where user = 'wyl' AND host = 'localhost';
+
+权限管理：
+授权：
+GRANT priv_type [(column_list)] ON database.table	
+TO user [IDENTIFIED BY [PASSWORD] 'password']
+[,user [IDENTIFIED BY [PASSWORD] 'password']]
+...
+[WITH with_option...];
+column_list表示权限作用的字段，没有时表示作用于整张表。
+with_option取值:
+GRANT OPTION:被授权的用户可以将权限授权给其他用户。（给其他用户赋权限时，权限不得超过自己的）
+MAX_QUERIES_PER_HOUR count:	设置每小时可以执行count次查询
+MAX_UPDATES_PER_HOUR count:	设置每小时可以执行count次更新
+MAX_CONNECTIONS_PER_HOUR count:	设置每小时可以建立count次连接
+MAX_USER_CONNECTIONS count:	设置单个用户可以用事具有count个连接
+
+
+查看权限：
+SHOW GRANTS FOR username \G;
+或者去user表查看相应字段取值
+eg:
+SELECT host,user,password,select_priv,update_priv,grant_priv,drop_priv
+FROM mysql.user WHERE user = 'wyl' \G;
+
+收回权限：
+REVOKE priv_type [(column_list)] ON database.table	
+FROM user [IDENTIFIED BY [PASSWORD] 'password']
+[,user [IDENTIFIED BY [PASSWORD] 'password']]
+...;	
+
+回收全有权限:
+REVOKE ALL PREVILEGES,GRANT OPTION 
+FROM user [IDENTIFIED BY [PASSWORD] 'password']
+[,user [IDENTIFIED BY [PASSWORD] 'password']]
+...;
+
+
+十七、日志管理
+Mysql日志分为二进制日志、错误日志和查询日志。
+默认情况下，MYSQL指挥启动错误日志文件，其他日志文件需要手动启动才可以被启动。
+
+二进制日志：该日志文件会以二进制形式记录数据库的各种操作，记录DDL和DML语句，但是却不会记录查询语句。
+错误日志：该日志文件会记录MYSQL服务器启动、关闭和运行时出错等信息。
+通用查询日志：该日志记录MYSQL服务器的启动和关闭信息、客户端的连接信息、更新SQL语句和查询SQL语句。
+慢查询日志：记录执行时间超过指定时间的各种操作，通过工具分析慢查询日志可以定位MYSQL服务器性能瓶颈所在。
+
+启动日志后，虽然可以实现对MYSQL服务器进行维护，但是会降低mysql软件的执行速度。
+
+日志在my.ini配置文件中的mysqld组下面进行配置，有配置就是启动了日志，没有就是没启动。
+查看二进制日志：mysqlbinlog filename.number;
+其他日志是文本形式，可以直接打开查看。 
+动态打开或关闭通用日志: SET global general_log = on/off; 立刻生效
+动态打开或关闭慢查询日志:SET global slow_query_log = on/off; 需要重新连接才能生效
+SET global long_query_time = 3;	//单位:秒
+配置文件：
+[mysqld]
+log-low-queries[=dir\[filename]]
+long_query_time = n (单位：秒，默认10秒)	
+MYSQL自带的慢查询日志分析工具：mysqldumpslow.pl
+mysqldumpslow.pl -s at -t 1 'slow.log'
+-s:分析慢查询日志时指定排序参数。取值有：al-平均锁定时间 ar-平均返回记录数 at-平均查询时间
+-t:指定显示的行数
+最后跟慢查询日志的名称。
+
+删除mysql的日志，进行重新写入：
+mysqladmin -u root -p flush-logs
+
+ 
+
+十八、数据库维护和性能提高
+数据库维护：包括备份数据、还原数据、数据库迁移、表导出和导入。
+注：mysql和mysqldump命令不是在mysql命令窗口执行的，而是在操作系统命令窗口（cmd命令窗口或者linux命令窗口）下执行的，后面不需要加;
+
+数据库备份：
+方法一：复制数据文件进行备份。 
+只适合存储引擎为MyISAM的表，不适合InnoDB存储引擎的表。
+复制前：1）FLUSH TABLES; 2)停止mysql服务器。
+拷贝文件:MySQL Server 5.5\data目录
+方法二：通过mysqldump命令实现数据备份
+该命令会将包含数据的表结构和数据内容保存在相应的文件中。
+mysqldump -u username -p dbname table1 table2 ... tablen > backupname.sql
+mysqldump -u username -p --database dbname1 dbname2 ... dbnamen > backupname.sql
+mysqldump -u username -p --all -databases > backupname.sql
+
+数据还原：
+方法一：复制数据文件进行还原。 
+方法二：通过mysql命令还原
+mysqldump -u username -p [dbname]< backupname.sql
+
+表导出到文本文件:
+方法一：SELECT ... INTO OUTFILE
+SELECT ... FROM table_name [WHERE condition] INTO OUTFILE 'file_name' [OPTION]
+方法二：通过mysqldump命令
+mysqldump -u root -pPassword -T file_directory dbname table_name [OPTION]
+eg:mysqldump -u root -proot -T c:\ company t_dept
+
+方法三：通过mysql命令导出
+mysql -u root -pPassword -e "SELECT ... FROM table_namme" dbname>file_name
+eg:mysql -u root -p -e "SELECT * FROM customers" crashcourse > C:/customers.txt
+后缀可以改为其他，比如xlsx.
+
+
+文本文件导入到数据库:
+方法一:执行LOAD DATA INFILE命令
+LOAD DATA[LOCAL] INFILE file_name INTO TABLE table_name [OPTION]
+方法二：执行mysqlimport命令
+mysqlimport -u root -pPassword[--LOCAL] dbname file_name[OPTION]
+
+数据库迁移：
+先导入再导入
+或：同时进行。
+eg:
+mysqldump -h hostname1 -u root -password=password1 -all-databases 
+|
+mysql -h hostname2 -u root -password=password2
+
+
+MYSQL性能优化建议:
+1)硬件参数要满足，建议运行在专用的服务器上；
+2)随着运行时间的推移，不断调整内存分配、缓存区大小等参数配置。 可以通过SHOW VARIABLES和SHOW STATUS来查看当前设置。
+3)MYSQL是一个多用户多线程的数据库管理系统。可以通过SHOW PROCESSLIST显示所有活动进程，通过执行kill命令终结消耗太多资源的进程。
+4)通过SELECT 语句实现多表查询时，应该多次试验连接和子查询等各种方式，找出最佳的方式。在具体判断SELECT语句执行性能时，可以通过EXPLAIN语句查看SELECT语句的执行情况。
+5)使用存储过程比一条一条执行语句速度要块许多；
+6)不要查找比需求还要多的数据内容，换言之，不要执行"SELECT *"语句(除非真正要查询所有字段);
+7)通过UNION关键字连接的SELECT语句，代替包含一系列复杂OR条件的SELECT 语句可以有极大的性能改进。
+8)索引可以改善数据检索的性能，但是会损失数据CUD操作（数据插入、数据更新和数据删除）性能。因此对于不经常被查询的表，最好不要创建索引。
+9)关键字LIKE的执行效率很低，一般来说，会通过"FULL TEXT"来代替关键字LIKE；
+10)数据库中的表是不断变化的尸体。一组结构优良的表，使用一段时间后，表的使用和内容就会需要进行更改，因此当初理想的优化和配置就需要改变。
