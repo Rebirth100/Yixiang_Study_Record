@@ -1,0 +1,30 @@
+# Qt Creator 本地配置
+*.pro.user
+*.pro.user.*
+
+# 编译生成的构建目录
+build*/
+debug/
+release/
+Makefile
+.qmake.stash
+
+# Qt 自动生成的文件
+ui_*.h
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+
+# 编译产物
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# 系统文件（Mac/Windows）
+.DS_Store
+Thumbs.db
