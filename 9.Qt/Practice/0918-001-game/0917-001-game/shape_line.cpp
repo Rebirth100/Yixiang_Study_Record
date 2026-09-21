@@ -1,0 +1,97 @@
+#include "shape.h"
+
+Shape::Shape(int x,int y,QWidget *parent)
+    : QObject{parent}
+{
+    button_1_=new QPushButton(parent);
+    button_2_=new QPushButton(parent);
+    button_3_=new QPushButton(parent);
+    button_4_=new QPushButton(parent);
+
+    button_1_->setGeometry(100,100,Size,Size);
+    button_1_->setGeometry(100+Size,100,Size,Size);
+    button_1_->setGeometry(100+2*Size,100,Size,Size);
+    button_1_->setGeometry(100+3*Size,100,Size,Size);
+
+    button_1_->setStyleSheet(QString::fromUtf8("background-color: rgb(97, 58, 255);"));
+    button_2_->setStyleSheet(QString::fromUtf8("background-color: rgb(97, 58, 255);"));
+    button_3_->setStyleSheet(QString::fromUtf8("background-color: rgb(97, 58, 255);"));
+    button_4_->setStyleSheet(QString::fromUtf8("background-color: rgb(97, 58, 255);"));
+}
+
+
+void Shape::Left()
+{
+    InnerLeft(button_1_);
+    InnerLeft(button_2_);
+    InnerLeft(button_3_);
+    InnerLeft(button_4_);
+}
+void Shape::Right()
+{
+    InnerRight(button_1_);
+    InnerRight(button_2_);
+    InnerRight(button_3_);
+    InnerRight(button_4_);
+}
+void Shape::Down()
+{
+    InnerDown(button_1_);
+    InnerDown(button_2_);
+    InnerDown(button_3_);
+    InnerDown(button_4_);
+}
+void Shape::Change()
+{
+    InnerDown(button_1_);
+    InnerDown(button_2_);
+    InnerDown(button_3_);
+    InnerDown(button_4_);
+}
+
+
+void Shape::InnerLeft(QPushButton* button)
+{
+    int x= button->x();
+    int y= button->y();
+    x-=Size;
+    button->move(x,y);
+}
+
+void Shape::InnerRight(QPushButton* button)
+{
+    int x= button->x();
+    int y= button->y();
+    x+=Size;
+    button->move(x,y);
+}
+void Shape::InnerDown(QPushButton* button)
+{
+    int x= button->x();
+    int y= button->y();
+    y+=Size;
+    button->move(x,y);
+}
+void Shape::InnerChange(QPushButton* button)
+{
+    int x_1=button_1_->x();
+    int y_1=button_1_->y();
+    x_1+=Size;
+    y_1-=Size;
+    button_1_->move(x_1,y_1);
+
+    int x_2=button_2_->x();
+    int y_2=button_2_->y();
+
+    int x_3=button_3_->x();
+    int y_3=button_3_->y();
+    x_3-=Size;
+    y_3+=Size;
+    button_3_->move(x_3,y_3);
+
+    int x_4=button_4_->x();
+    int y_4=button_4_->y();
+    x_4-=2*Size;
+    y_4+=2*Size;
+    button_4_->move(x_4,y_4);
+}
