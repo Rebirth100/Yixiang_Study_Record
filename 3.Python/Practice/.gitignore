@@ -1,0 +1,25 @@
+# Python 编译缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+.idea_modules/
+
+# VS Code
+.vscode/
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv/
+
+# 系统文件
+.DS_Store
+Thumbs.db
